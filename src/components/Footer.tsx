@@ -93,7 +93,7 @@ export function Footer() {
         
         <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
           <p className="text-center text-xs sm:text-sm text-[var(--color-text-secondary)]">
-            © {new Date().getFullYear()} Your Name. All rights reserved.
+            © {new Date().getFullYear()} Mohammadali Bakhtiarinejad. All rights reserved.
           </p>
         </div>
       </div>
