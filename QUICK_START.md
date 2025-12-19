@@ -44,7 +44,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
 
 ## 📚 Current Courses
 
-- **Derivatives Trading**
+- **Derivatives**
   - Introduction to Options Trading (your presentation)
 
 ## 🔗 Routes

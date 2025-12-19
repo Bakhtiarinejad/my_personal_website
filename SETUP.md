@@ -56,7 +56,7 @@ export const courses: Course[] = [
     presentations: [
       {
         id: 'options-trading-intro',
-        title: 'Introduction to Options Trading',
+        title: 'Introduction to Options',
         description: '...',
         duration: '45 minutes',
       },

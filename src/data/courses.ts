@@ -23,7 +23,7 @@ export const courses: Course[] = [
     presentations: [
       {
         id: 'options-trading-intro',
-        title: 'Introduction to Options Trading',
+        title: 'Introduction to Options',
         description: 'From Basic Concepts to Practical Strategies',
         duration: '45 minutes',
       },
