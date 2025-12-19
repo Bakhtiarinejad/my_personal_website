@@ -27,3 +27,59 @@ body {
   background-color: var(--color-bg-primary);
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Ensure touch targets are at least 44x44px for better mobile usability */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve text readability on mobile */
+  body {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Presentation container responsive styles */
+.presentation-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.presentation-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+.presentation-container table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .presentation-container {
+    padding: 0;
+  }
+  
+  .presentation-container iframe {
+    width: 100%;
+    height: auto;
+    min-height: 200px;
+  }
+}
+

@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 export function Footer() {
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1 md:col-span-2">
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+          <div className="col-span-1 sm:col-span-2 md:col-span-2">
+            <h3 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)] mb-3 sm:mb-4">
               Your Name
             </h3>
-            <p className="text-sm text-[var(--color-text-secondary)]">
+            <p className="text-xs sm:text-sm text-[var(--color-text-secondary)]">
               Sharing knowledge through courses and presentations on finance, trading, and investment strategies.
             </p>
           </div>
@@ -91,8 +91,8 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <p className="text-center text-sm text-[var(--color-text-secondary)]">
+        <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
+          <p className="text-center text-xs sm:text-sm text-[var(--color-text-secondary)]">
             © {new Date().getFullYear()} Your Name. All rights reserved.
           </p>
         </div>

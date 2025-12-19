@@ -28,9 +28,9 @@ export default function App() {
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <h1 className="text-[var(--color-text-primary)] mb-4">{title}</h1>
-      <p className="text-[var(--color-text-secondary)]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl text-[var(--color-text-primary)] mb-4 sm:mb-6">{title}</h1>
+      <p className="text-base sm:text-lg text-[var(--color-text-secondary)]">
         This page is coming soon. Please check back later.
       </p>
     </div>

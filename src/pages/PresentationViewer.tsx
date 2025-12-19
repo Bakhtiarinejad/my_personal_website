@@ -51,10 +51,10 @@ export function PresentationViewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)] mx-auto mb-4"></div>
-          <p className="text-[var(--color-text-secondary)]">Loading presentation...</p>
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-[var(--color-accent)] mx-auto mb-4"></div>
+          <p className="text-sm sm:text-base text-[var(--color-text-secondary)]">Loading presentation...</p>
         </div>
       </div>
     );
@@ -62,13 +62,13 @@ export function PresentationViewer() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-red-800 mb-2">Error</h2>
-          <p className="text-red-600">{error}</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-red-800 mb-2">Error</h2>
+          <p className="text-sm sm:text-base text-red-600 mb-4">{error}</p>
           <Link
             to={`/course/${courseId}`}
-            className="inline-block mt-4 text-[var(--color-accent)] hover:underline"
+            className="inline-block text-sm sm:text-base text-[var(--color-accent)] hover:underline"
           >
             ← Back to Course
           </Link>
@@ -81,22 +81,22 @@ export function PresentationViewer() {
     <div className="min-h-screen bg-gray-900">
       {/* Header Bar */}
       <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div className="flex-1 min-w-0">
               <Link
                 to={`/course/${courseId}`}
-                className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors"
+                className="text-xs sm:text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors inline-block mb-1"
               >
                 ← Back to {course.title}
               </Link>
-              <h1 className="text-xl font-semibold text-[var(--color-text-primary)] mt-1">
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold text-[var(--color-text-primary)] truncate">
                 {presentation.title}
               </h1>
             </div>
             <button
               onClick={() => window.print()}
-              className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-secondary)] transition-colors text-sm font-medium"
+              className="px-3 sm:px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-secondary)] transition-colors text-xs sm:text-sm font-medium w-full sm:w-auto flex-shrink-0"
             >
               Print / Save PDF
             </button>
