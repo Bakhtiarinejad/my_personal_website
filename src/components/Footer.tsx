@@ -7,7 +7,7 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           <div className="col-span-1 sm:col-span-2 md:col-span-2">
             <h3 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)] mb-3 sm:mb-4">
-              Your Name
+              Mohammadali Bakhtiarinejad
             </h3>
             <p className="text-xs sm:text-sm text-[var(--color-text-secondary)]">
               Sharing knowledge through courses and presentations on finance, trading, and investment strategies.
