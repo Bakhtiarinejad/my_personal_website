@@ -1,10 +1,11 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getCourseById, getPresentationById } from '../data/courses';
 
 export function PresentationViewer() {
   const { courseId, presentationId } = useParams<{ courseId: string; presentationId: string }>();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const course = courseId ? getCourseById(courseId) : undefined;
   const presentation = courseId && presentationId 
@@ -22,12 +23,46 @@ export function PresentationViewer() {
     return <Navigate to="/courses" replace />;
   }
 
+  // Check if presentation file exists
+  useEffect(() => {
+    if (presentationUrl) {
+      fetch(presentationUrl, { method: 'HEAD' })
+        .then(response => {
+          if (!response.ok) {
+            setError('Presentation file not found');
+            setLoading(false);
+          }
+        })
+        .catch(() => {
+          setError('Failed to load presentation');
+          setLoading(false);
+        });
+    }
+  }, [presentationUrl]);
+
   if (!presentationUrl) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-semibold text-red-800 mb-2">Error</h2>
           <p className="text-sm sm:text-base text-red-600 mb-4">Presentation not found</p>
+          <Link
+            to={`/course/${courseId}`}
+            className="inline-block text-sm sm:text-base text-[var(--color-accent)] hover:underline"
+          >
+            ← Back to Course
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-red-800 mb-2">Error</h2>
+          <p className="text-sm sm:text-base text-red-600 mb-4">{error}</p>
           <Link
             to={`/course/${courseId}`}
             className="inline-block text-sm sm:text-base text-[var(--color-accent)] hover:underline"
@@ -82,12 +117,19 @@ export function PresentationViewer() {
         className="flex-1 w-full border-none"
         style={{ 
           display: loading ? 'none' : 'block',
-          minHeight: 'calc(100vh - 80px)'
+          minHeight: 'calc(100vh - 80px)',
+          width: '100%'
         }}
-        onLoad={() => setLoading(false)}
+        onLoad={() => {
+          setLoading(false);
+          setError(null);
+        }}
+        onError={() => {
+          setLoading(false);
+          setError('Failed to load presentation content');
+        }}
         title={presentation.title}
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-        loading="lazy"
+        allow="fullscreen"
         referrerPolicy="strict-origin-when-cross-origin"
       />
     </div>
