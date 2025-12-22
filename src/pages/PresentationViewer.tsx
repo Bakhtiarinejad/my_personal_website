@@ -86,6 +86,9 @@ export function PresentationViewer() {
         }}
         onLoad={() => setLoading(false)}
         title={presentation.title}
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
       />
     </div>
   );
