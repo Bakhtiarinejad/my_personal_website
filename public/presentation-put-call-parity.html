@@ -128,9 +128,12 @@
         }
         .calc-mode {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 10px;
             margin-bottom: 20px;
+        }
+        .calc-mode .mode-btn:last-child {
+            grid-column: span 3;
         }
         .mode-btn {
             padding: 12px;
@@ -326,6 +329,7 @@
                         <button class="mode-btn active" onclick="setMode('call')" id="mode-call">Find Call (C)</button>
                         <button class="mode-btn" onclick="setMode('put')" id="mode-put">Find Put (P)</button>
                         <button class="mode-btn" onclick="setMode('stock')" id="mode-stock">Find Stock (S)</button>
+                        <button class="mode-btn" onclick="setMode('rate')" id="mode-rate">Find Rate (r)</button>
                         <button class="mode-btn" onclick="setMode('arbitrage')" id="mode-arbitrage">Check Arbitrage</button>
                     </div>
                     
@@ -425,6 +429,29 @@
                 } else {
                     resultValue.textContent = '—';
                     resultUnit.textContent = 'Enter C, P, and K';
+                }
+            } else if (currentMode === 'rate') {
+                if (C !== null && P !== null && S !== null && K !== null) {
+                    // From: C + K*e^(-rT) = P + S
+                    // K*e^(-rT) = P + S - C
+                    // e^(-rT) = (P + S - C) / K
+                    // -rT = ln((P + S - C) / K)
+                    // r = -ln((P + S - C) / K) / T = ln(K / (P + S - C)) / T
+                    const rightSide = P + S - C;
+                    if (rightSide > 0 && K > 0 && T > 0) {
+                        const calcR = Math.log(K / rightSide) / T;
+                        const calcRPercent = calcR * 100;
+                        resultLabel.textContent = 'Implied Risk-Free Rate';
+                        resultValue.textContent = calcRPercent.toFixed(2) + '%';
+                        resultUnit.textContent = 'Annual rate implied by options prices';
+                        formulaUsed.innerHTML = 'r = ln(K / (P + S − C)) / T';
+                    } else {
+                        resultValue.textContent = 'Invalid';
+                        resultUnit.textContent = 'P + S must be greater than C';
+                    }
+                } else {
+                    resultValue.textContent = '—';
+                    resultUnit.textContent = 'Enter C, P, S, and K';
                 }
             } else if (currentMode === 'arbitrage') {
                 if (C !== null && P !== null && S !== null && K !== null) {
