@@ -15,6 +15,11 @@ export function PresentationViewer() {
   // Map presentation IDs to their HTML files
   const presentationMap: Record<string, string> = {
     'options-trading-intro': '/presentation-options-trading.html',
+    'put-call-parity': '/presentation-put-call-parity.html',
+    'microeconomics-intro': '/presentation-microeconomics.html',
+    'supply-demand': '/presentation-supply-demand.html',
+    'elasticity': '/presentation-elasticity.html',
+    'macro-intro': '/presentation-macro-intro.html',
   };
 
   const presentationUrl = presentationId ? presentationMap[presentationId] : undefined;

@@ -27,6 +27,52 @@ export const courses: Course[] = [
         description: 'From Basic Concepts to Practical Strategies',
         duration: '45 minutes',
       },
+      {
+        id: 'put-call-parity',
+        title: 'Put-Call Parity',
+        description: 'The Fundamental Relationship with Interactive Calculator',
+        duration: '40 minutes',
+      },
+    ],
+  },
+  {
+    id: 'microeconomics',
+    title: 'Microeconomics',
+    description: 'Explore fundamental microeconomic principles, market structures, consumer behavior, and firm decision-making.',
+    category: 'Economics',
+    presentations: [
+      {
+        id: 'microeconomics-intro',
+        title: 'Introduction to Microeconomics',
+        description: 'Principles, Markets & Decision Making',
+        duration: '60 minutes',
+      },
+      {
+        id: 'supply-demand',
+        title: 'Demand, Supply & Market Equilibrium',
+        description: 'Understanding How Markets Work',
+        duration: '55 minutes',
+      },
+      {
+        id: 'elasticity',
+        title: 'Elasticity',
+        description: 'Measuring Responsiveness in Markets',
+        duration: '50 minutes',
+      },
+    ],
+  },
+  {
+    id: 'macroeconomics',
+    title: 'Macroeconomics',
+    description: 'Study the economy as a whole: GDP, inflation, unemployment, monetary policy, fiscal policy, and economic growth.',
+    category: 'Economics',
+    presentations: [
+      {
+        id: 'macro-intro',
+        title: 'Introduction to Macroeconomics',
+        description: 'Understanding the Economy as a Whole',
+        duration: '55 minutes',
+      },
     ],
   },
   // Add more courses here as needed

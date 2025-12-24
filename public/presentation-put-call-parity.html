@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+    <title>Put-Call Parity</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; min-width: 100%; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d1b4e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .slides-stack {
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            max-width: 1280px; margin: 0 auto; padding: 20px 16px; width: 100%;
+        }
+        .slide-wrapper {
+            width: 100%; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+            background: #fff; transition: box-shadow 0.3s ease; position: relative;
+        }
+        .slide-wrapper:hover { box-shadow: 0 35px 60px -15px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.15); }
+        .slide-iframe { width: 1280px; height: 720px; border: none; transform-origin: top left; position: absolute; top: 0; left: 0; }
+        
+        /* Calculator Slide - Special handling */
+        .calculator-slide {
+            width: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+        }
+        .calc-header {
+            padding: 30px 40px 20px;
+            background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+            color: #fff;
+        }
+        .calc-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .calc-subtitle {
+            font-size: 16px;
+            color: rgba(255,255,255,0.9);
+            margin-top: 6px;
+        }
+        .calc-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px 40px 40px;
+        }
+        @media (max-width: 768px) {
+            .calc-content { grid-template-columns: 1fr; padding: 20px; }
+            .calc-header { padding: 20px; }
+            .calc-title { font-size: 24px; }
+        }
+        .input-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title span {
+            color: #ff6b6b;
+        }
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .input-label-text {
+            font-size: 14px;
+            color: #a8b2d1;
+            font-weight: 600;
+        }
+        .input-label-symbol {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #ff6b6b;
+            background: rgba(230,57,70,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: rgba(0,0,0,0.5);
+        }
+        .input-field::placeholder {
+            color: #5a6a8a;
+        }
+        .output-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .calc-mode {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+            color: #a8b2d1;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .mode-btn:hover {
+            border-color: rgba(255,255,255,0.3);
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #e63946, #ff6b6b);
+            border-color: transparent;
+            color: #fff;
+        }
+        .result-box {
+            background: linear-gradient(135deg, rgba(230,57,70,0.2), rgba(255,107,107,0.1));
+            border: 2px solid rgba(230,57,70,0.3);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .result-label {
+            font-size: 14px;
+            color: #a8b2d1;
+            margin-bottom: 8px;
+        }
+        .result-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+        .result-unit {
+            font-size: 14px;
+            color: #ff6b6b;
+            margin-top: 5px;
+        }
+        .formula-display {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .formula-text {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #ff6b6b;
+        }
+        .arbitrage-box {
+            background: rgba(42, 157, 143, 0.2);
+            border: 2px solid rgba(42, 157, 143, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .arbitrage-box.violation {
+            background: rgba(230, 57, 70, 0.2);
+            border-color: rgba(230, 57, 70, 0.3);
+        }
+        .arbitrage-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2a9d8f;
+            margin-bottom: 5px;
+        }
+        .arbitrage-box.violation .arbitrage-title {
+            color: #ff6b6b;
+        }
+        .arbitrage-text {
+            font-size: 12px;
+            color: #a8b2d1;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) { 
+            .slides-stack { padding: 16px 24px; gap: 16px !important; } 
+            .slide-wrapper { border-radius: 8px; } 
+        }
+        @media (max-width: 480px) { 
+            .slides-stack { padding: 12px 16px; gap: 12px !important; } 
+            .slide-wrapper { border-radius: 6px; } 
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="slides-stack">
+        <!-- Slide 1: Title -->
+        <div class="slide-wrapper">
+            <iframe srcdoc="<!DOCTYPE html><html><head><meta charset='UTF-8'><link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap' rel='stylesheet'><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;overflow:hidden}.slide{width:1280px;height:720px;background:linear-gradient(135deg,#0f0f23 0%,#1a1a3e 50%,#2d1b4e 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#fff;position:relative}.overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 20%,rgba(230,57,70,0.15),transparent 50%)}.content{position:relative;z-index:2;padding:60px}.hero{font-family:'Playfair Display',serif;font-size:72px;font-weight:900;margin-bottom:20px;background:linear-gradient(135deg,#fff,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.sub{font-size:28px;color:#a8b2d1;margin-bottom:30px}.formula-hero{font-family:'Courier New',monospace;font-size:36px;color:#ff6b6b;background:rgba(230,57,70,0.15);padding:20px 40px;border-radius:12px;border:2px solid rgba(230,57,70,0.3);margin:25px 0}.meta{font-size:18px;color:#5a6a8a;margin-top:15px}</style></head><body><div class='slide'><div class='overlay'></div><div class='content'><h1 class='hero'>Put-Call Parity</h1><div class='sub'>The Fundamental Relationship in Options Pricing</div><div class='formula-hero'>C + PV(K) = P + S</div><div class='meta'>Interactive Presentation with Calculator</div></div></div></body></html>" class="slide-iframe" frameborder="0" scrolling="no"></iframe>
+        </div>
+
+        <!-- Slide 2: What is Put-Call Parity? -->
+        <div class="slide-wrapper">
+            <iframe srcdoc="<!DOCTYPE html><html><head><meta charset='UTF-8'><link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap' rel='stylesheet'><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;overflow:hidden;color:#fff}.slide{width:1280px;height:720px;background:linear-gradient(135deg,#0f0f23 0%,#1a1a3e 100%);display:flex;flex-direction:column}.header{padding:40px 70px 25px;background:linear-gradient(135deg,#e63946 0%,#ff6b6b 100%)}.title{font-family:'Playfair Display',serif;font-size:44px;font-weight:700}.subtitle{font-size:20px;color:rgba(255,255,255,0.9);margin-top:8px}.content{display:flex;flex-grow:1;padding:35px 70px 40px;gap:40px}.left{flex:1.1}.right{flex:1}.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px;margin-bottom:20px}.section-title{font-size:22px;color:#fff;margin-bottom:15px;font-weight:700}.definition{font-size:18px;line-height:1.8;color:#a8b2d1}.highlight{color:#ff6b6b;font-weight:600}.formula-box{background:linear-gradient(135deg,rgba(230,57,70,0.2),rgba(255,107,107,0.1));border:2px solid rgba(230,57,70,0.3);border-radius:16px;padding:30px;text-align:center;margin-bottom:20px}.formula{font-family:'Courier New',monospace;font-size:32px;color:#ff6b6b;margin-bottom:15px}.formula-alt{font-family:'Courier New',monospace;font-size:20px;color:#a8b2d1}.variable-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.var-item{background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px}.var-symbol{font-family:'Courier New',monospace;font-size:20px;color:#ff6b6b;background:rgba(230,57,70,0.2);padding:5px 12px;border-radius:6px}.var-desc{font-size:14px;color:#a8b2d1}</style></head><body><div class='slide'><div class='header'><h1 class='title'>What is Put-Call Parity?</h1><div class='subtitle'>The no-arbitrage relationship between European options</div></div><div class='content'><div class='left'><div class='card'><h3 class='section-title'>Definition</h3><p class='definition'>Put-Call Parity is a <span class='highlight'>fundamental principle</span> that defines the relationship between the prices of European call and put options with the same strike price and expiration date.<br><br>It ensures that no <span class='highlight'>arbitrage opportunity</span> exists between equivalent positions.</p></div><div class='formula-box'><div class='formula'>C + PV(K) = P + S</div><div class='formula-alt'>Call + Present Value of Strike = Put + Stock</div></div></div><div class='right'><div class='card'><h3 class='section-title'>Variables Explained</h3><div class='variable-grid'><div class='var-item'><span class='var-symbol'>C</span><span class='var-desc'>Call option premium</span></div><div class='var-item'><span class='var-symbol'>P</span><span class='var-desc'>Put option premium</span></div><div class='var-item'><span class='var-symbol'>S</span><span class='var-desc'>Current stock price</span></div><div class='var-item'><span class='var-symbol'>K</span><span class='var-desc'>Strike price</span></div><div class='var-item'><span class='var-symbol'>r</span><span class='var-desc'>Risk-free interest rate</span></div><div class='var-item'><span class='var-symbol'>T</span><span class='var-desc'>Time to expiration (years)</span></div></div><div style='margin-top:18px;background:rgba(0,0,0,0.3);border-radius:10px;padding:15px;text-align:center'><span style='font-size:14px;color:#a8b2d1'>Present Value of Strike:</span><div style='font-family:monospace;font-size:18px;color:#ff6b6b;margin-top:8px'>PV(K) = K × e<sup>-rT</sup></div></div></div></div></div></div></body></html>" class="slide-iframe" frameborder="0" scrolling="no"></iframe>
+        </div>
+
+        <!-- Slide 3: The Intuition -->
+        <div class="slide-wrapper">
+            <iframe srcdoc="<!DOCTYPE html><html><head><meta charset='UTF-8'><link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap' rel='stylesheet'><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;overflow:hidden;color:#fff}.slide{width:1280px;height:720px;background:linear-gradient(135deg,#0f0f23 0%,#1a1a3e 100%);display:flex;flex-direction:column}.header{padding:40px 70px 25px;background:linear-gradient(135deg,#e63946 0%,#ff6b6b 100%)}.title{font-family:'Playfair Display',serif;font-size:44px;font-weight:700}.subtitle{font-size:20px;color:rgba(255,255,255,0.9);margin-top:8px}.content{display:flex;flex-grow:1;padding:30px 70px 35px;gap:30px}.portfolio-card{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px}.portfolio-header{display:flex;align-items:center;gap:15px;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1)}.portfolio-icon{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}.portfolio-card:nth-child(1) .portfolio-icon{background:linear-gradient(135deg,#2a9d8f,#57cc99)}.portfolio-card:nth-child(2) .portfolio-icon{background:linear-gradient(135deg,#0077b6,#00b4d8)}.portfolio-title{font-size:20px;font-weight:700}.position{background:rgba(0,0,0,0.3);border-radius:10px;padding:15px;margin-bottom:12px;display:flex;align-items:center;gap:15px}.position-sign{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}.position-sign.plus{background:rgba(42,157,143,0.3);color:#2a9d8f}.position-sign.minus{background:rgba(230,57,70,0.3);color:#ff6b6b}.position-text{font-size:15px;color:#a8b2d1}.payoff-box{background:linear-gradient(135deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05));border-radius:12px;padding:18px;margin-top:15px}.payoff-title{font-size:13px;color:#a8b2d1;margin-bottom:10px}.payoff-formula{font-family:'Courier New',monospace;font-size:16px;color:#ff6b6b}.equals{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 10px}.equals-sign{font-size:48px;color:#ff6b6b}.equals-text{font-size:12px;color:#a8b2d1;margin-top:5px}</style></head><body><div class='slide'><div class='header'><h1 class='title'>The Intuition: Two Equivalent Portfolios</h1><div class='subtitle'>Both portfolios have identical payoffs at expiration</div></div><div class='content'><div class='portfolio-card'><div class='portfolio-header'><div class='portfolio-icon'>A</div><div class='portfolio-title'>Protective Put</div></div><div class='position'><div class='position-sign plus'>+</div><span class='position-text'>Buy the underlying stock <strong>(S)</strong></span></div><div class='position'><div class='position-sign plus'>+</div><span class='position-text'>Buy a put option <strong>(P)</strong></span></div><div class='payoff-box'><div class='payoff-title'>Portfolio Value at Expiration:</div><div class='payoff-formula'>max(S<sub>T</sub>, K)</div></div><div style='margin-top:15px;font-size:13px;color:#5a6a8a;line-height:1.6'>If stock rises: keep the stock<br>If stock falls: exercise put at K</div></div><div class='equals'><div class='equals-sign'>=</div><div class='equals-text'>Same Payoff</div></div><div class='portfolio-card'><div class='portfolio-header'><div class='portfolio-icon'>B</div><div class='portfolio-title'>Fiduciary Call</div></div><div class='position'><div class='position-sign plus'>+</div><span class='position-text'>Buy a call option <strong>(C)</strong></span></div><div class='position'><div class='position-sign plus'>+</div><span class='position-text'>Buy a bond paying K at maturity <strong>(PV(K))</strong></span></div><div class='payoff-box'><div class='payoff-title'>Portfolio Value at Expiration:</div><div class='payoff-formula'>max(S<sub>T</sub>, K)</div></div><div style='margin-top:15px;font-size:13px;color:#5a6a8a;line-height:1.6'>If stock rises: exercise call, get S<sub>T</sub><br>If stock falls: keep K from bond</div></div></div></div></body></html>" class="slide-iframe" frameborder="0" scrolling="no"></iframe>
+        </div>
+
+        <!-- Slide 4: Deriving Prices -->
+        <div class="slide-wrapper">
+            <iframe srcdoc="<!DOCTYPE html><html><head><meta charset='UTF-8'><link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap' rel='stylesheet'><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;overflow:hidden;color:#fff}.slide{width:1280px;height:720px;background:linear-gradient(135deg,#0f0f23 0%,#1a1a3e 100%);display:flex;flex-direction:column}.header{padding:40px 70px 25px;background:linear-gradient(135deg,#e63946 0%,#ff6b6b 100%)}.title{font-family:'Playfair Display',serif;font-size:44px;font-weight:700}.subtitle{font-size:20px;color:rgba(255,255,255,0.9);margin-top:8px}.content{display:flex;flex-grow:1;padding:30px 70px 35px;gap:25px}.derive-card{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:25px;display:flex;flex-direction:column}.derive-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.derive-icon{width:45px;height:45px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}.derive-card:nth-child(1) .derive-icon{background:linear-gradient(135deg,#e63946,#ff6b6b)}.derive-card:nth-child(2) .derive-icon{background:linear-gradient(135deg,#2a9d8f,#57cc99)}.derive-card:nth-child(3) .derive-icon{background:linear-gradient(135deg,#0077b6,#00b4d8)}.derive-title{font-size:18px;font-weight:700}.formula-main{background:linear-gradient(135deg,rgba(0,0,0,0.4),rgba(0,0,0,0.2));border-radius:12px;padding:20px;text-align:center;margin-bottom:15px}.formula-text{font-family:'Courier New',monospace;font-size:24px;color:#ff6b6b}.derive-desc{font-size:14px;color:#a8b2d1;line-height:1.7;flex-grow:1}.use-case{background:rgba(0,0,0,0.3);border-radius:10px;padding:14px;margin-top:12px}.use-case-title{font-size:12px;color:#5a6a8a;margin-bottom:6px}.use-case-text{font-size:13px;color:#a8b2d1;line-height:1.5}</style></head><body><div class='slide'><div class='header'><h1 class='title'>Deriving Option Prices</h1><div class='subtitle'>Rearranging the parity equation to solve for any variable</div></div><div class='content'><div class='derive-card'><div class='derive-header'><div class='derive-icon'>C</div><div class='derive-title'>Solve for Call Price</div></div><div class='formula-main'><div class='formula-text'>C = P + S − PV(K)</div></div><div class='derive-desc'>The call price equals the put price plus the stock price minus the present value of the strike.</div><div class='use-case'><div class='use-case-title'>USE CASE</div><div class='use-case-text'>Calculate theoretical call price when you know the put price. If the market call differs, arbitrage may exist.</div></div></div><div class='derive-card'><div class='derive-header'><div class='derive-icon'>P</div><div class='derive-title'>Solve for Put Price</div></div><div class='formula-main'><div class='formula-text'>P = C + PV(K) − S</div></div><div class='derive-desc'>The put price equals the call price plus the present value of strike minus the stock price.</div><div class='use-case'><div class='use-case-title'>USE CASE</div><div class='use-case-text'>Calculate theoretical put price when you know the call price. Useful for illiquid put markets.</div></div></div><div class='derive-card'><div class='derive-header'><div class='derive-icon'>S</div><div class='derive-title'>Implied Stock Price</div></div><div class='formula-main'><div class='formula-text'>S = C − P + PV(K)</div></div><div class='derive-desc'>The implied stock price from options prices. Should equal the actual stock price.</div><div class='use-case'><div class='use-case-title'>USE CASE</div><div class='use-case-text'>Check for arbitrage. If implied S differs from actual S, there may be a trading opportunity.</div></div></div></div></div></body></html>" class="slide-iframe" frameborder="0" scrolling="no"></iframe>
+        </div>
+
+        <!-- Slide 5: Arbitrage Opportunities -->
+        <div class="slide-wrapper">
+            <iframe srcdoc="<!DOCTYPE html><html><head><meta charset='UTF-8'><link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap' rel='stylesheet'><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;overflow:hidden;color:#fff}.slide{width:1280px;height:720px;background:linear-gradient(135deg,#0f0f23 0%,#1a1a3e 100%);display:flex;flex-direction:column}.header{padding:40px 70px 25px;background:linear-gradient(135deg,#e63946 0%,#ff6b6b 100%)}.title{font-family:'Playfair Display',serif;font-size:44px;font-weight:700}.subtitle{font-size:20px;color:rgba(255,255,255,0.9);margin-top:8px}.content{display:flex;flex-grow:1;padding:30px 70px 35px;gap:30px}.left{flex:1}.right{flex:1}.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:25px;margin-bottom:18px}.section-title{font-size:20px;font-weight:700;margin-bottom:15px;display:flex;align-items:center;gap:10px}.section-title span{color:#ff6b6b}.condition{background:rgba(0,0,0,0.3);border-radius:12px;padding:18px;margin-bottom:15px}.condition-formula{font-family:'Courier New',monospace;font-size:20px;color:#ff6b6b;margin-bottom:10px}.condition-text{font-size:14px;color:#a8b2d1;line-height:1.6}.arb-case{border-radius:12px;padding:20px;margin-bottom:15px}.arb-case.call-cheap{background:linear-gradient(135deg,rgba(42,157,143,0.2),rgba(42,157,143,0.1));border:1px solid rgba(42,157,143,0.3)}.arb-case.call-expensive{background:linear-gradient(135deg,rgba(230,57,70,0.2),rgba(230,57,70,0.1));border:1px solid rgba(230,57,70,0.3)}.arb-title{font-size:16px;font-weight:700;margin-bottom:12px}.arb-case.call-cheap .arb-title{color:#2a9d8f}.arb-case.call-expensive .arb-title{color:#ff6b6b}.arb-action{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:14px;color:#a8b2d1}.action-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px}.buy{background:rgba(42,157,143,0.3);color:#57cc99}.sell{background:rgba(230,57,70,0.3);color:#ff6b6b}</style></head><body><div class='slide'><div class='header'><h1 class='title'>Arbitrage Opportunities</h1><div class='subtitle'>Profit when put-call parity is violated</div></div><div class='content'><div class='left'><div class='card'><h3 class='section-title'><span>⚖️</span> Parity Violation</h3><div class='condition'><div class='condition-formula'>C + PV(K) ≠ P + S</div><div class='condition-text'>When the two sides of the equation don't equal, there's a <strong>risk-free profit</strong> opportunity.</div></div><p style='font-size:14px;color:#a8b2d1;line-height:1.6'>In practice, small violations are common due to transaction costs, bid-ask spreads, and execution delays. Profitable arbitrage requires the violation to exceed all trading costs.</p></div><div class='card'><h3 class='section-title'><span>📊</span> Measuring the Violation</h3><div style='background:rgba(0,0,0,0.3);border-radius:10px;padding:15px;text-align:center'><div style='font-family:monospace;font-size:18px;color:#ff6b6b;margin-bottom:8px'>Difference = (C + PV(K)) − (P + S)</div><div style='font-size:13px;color:#5a6a8a'>Positive = Call side overpriced<br>Negative = Put side overpriced</div></div></div></div><div class='right'><div class='arb-case call-cheap'><div class='arb-title'>If Call is Underpriced (C + PV(K) < P + S)</div><div class='arb-action'><span class='action-tag buy'>BUY</span> Call option</div><div class='arb-action'><span class='action-tag buy'>BUY</span> Bond (invest PV(K))</div><div class='arb-action'><span class='action-tag sell'>SELL</span> Put option</div><div class='arb-action'><span class='action-tag sell'>SELL</span> Stock (short)</div><div style='font-size:12px;color:#2a9d8f;margin-top:10px'>→ Lock in risk-free profit equal to the difference</div></div><div class='arb-case call-expensive'><div class='arb-title'>If Call is Overpriced (C + PV(K) > P + S)</div><div class='arb-action'><span class='action-tag sell'>SELL</span> Call option</div><div class='arb-action'><span class='action-tag sell'>SELL</span> Bond (borrow PV(K))</div><div class='arb-action'><span class='action-tag buy'>BUY</span> Put option</div><div class='arb-action'><span class='action-tag buy'>BUY</span> Stock</div><div style='font-size:12px;color:#ff6b6b;margin-top:10px'>→ Lock in risk-free profit equal to the difference</div></div></div></div></div></body></html>" class="slide-iframe" frameborder="0" scrolling="no"></iframe>
+        </div>
+
+        <!-- Slide 6: Assumptions & Limitations -->
+        <div class="slide-wrapper">
+            <iframe srcdoc="<!DOCTYPE html><html><head><meta charset='UTF-8'><link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap' rel='stylesheet'><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;overflow:hidden;color:#fff}.slide{width:1280px;height:720px;background:linear-gradient(135deg,#0f0f23 0%,#1a1a3e 100%);display:flex;flex-direction:column}.header{padding:40px 70px 25px;background:linear-gradient(135deg,#e63946 0%,#ff6b6b 100%)}.title{font-family:'Playfair Display',serif;font-size:44px;font-weight:700}.subtitle{font-size:20px;color:rgba(255,255,255,0.9);margin-top:8px}.content{display:flex;flex-grow:1;padding:30px 70px 35px;gap:30px}.left{flex:1}.right{flex:1}.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:25px;margin-bottom:18px}.section-title{font-size:20px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:10px}.section-title span{color:#ff6b6b}.assumption-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:15px;padding:15px;background:rgba(0,0,0,0.2);border-radius:10px}.assumption-num{width:28px;height:28px;border-radius:50%;background:#ff6b6b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}.assumption-text{font-size:14px;color:#a8b2d1;line-height:1.6}.limit-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}.limit-icon{color:#f4a261;font-size:20px}.limit-text{font-size:14px;color:#a8b2d1;line-height:1.6}.note-box{background:linear-gradient(135deg,rgba(244,162,97,0.2),rgba(244,162,97,0.1));border:1px solid rgba(244,162,97,0.3);border-radius:12px;padding:18px}.note-title{font-size:14px;font-weight:700;color:#f4a261;margin-bottom:8px}.note-text{font-size:13px;color:#a8b2d1;line-height:1.6}</style></head><body><div class='slide'><div class='header'><h1 class='title'>Assumptions & Limitations</h1><div class='subtitle'>When put-call parity holds and when it doesn't</div></div><div class='content'><div class='left'><div class='card'><h3 class='section-title'><span>✓</span> Key Assumptions</h3><div class='assumption-item'><div class='assumption-num'>1</div><div class='assumption-text'><strong>European Options Only</strong><br>Options can only be exercised at expiration, not before.</div></div><div class='assumption-item'><div class='assumption-num'>2</div><div class='assumption-text'><strong>Same Strike & Expiration</strong><br>Call and put must have identical K and T.</div></div><div class='assumption-item'><div class='assumption-num'>3</div><div class='assumption-text'><strong>No Dividends</strong><br>The stock pays no dividends during the option's life (or adjusted for known dividends).</div></div><div class='assumption-item'><div class='assumption-num'>4</div><div class='assumption-text'><strong>No Transaction Costs</strong><br>No commissions, bid-ask spreads, or taxes.</div></div><div class='assumption-item'><div class='assumption-num'>5</div><div class='assumption-text'><strong>Borrowing = Lending Rate</strong><br>Same risk-free rate for borrowing and investing.</div></div></div></div><div class='right'><div class='card'><h3 class='section-title'><span>⚠️</span> Real-World Limitations</h3><div class='limit-item'><span class='limit-icon'>•</span><div class='limit-text'><strong>American options:</strong> Early exercise rights break the parity relationship</div></div><div class='limit-item'><span class='limit-icon'>•</span><div class='limit-text'><strong>Dividends:</strong> Must subtract PV of expected dividends from stock price</div></div><div class='limit-item'><span class='limit-icon'>•</span><div class='limit-text'><strong>Transaction costs:</strong> Create a no-arbitrage band rather than exact equality</div></div><div class='limit-item'><span class='limit-icon'>•</span><div class='limit-text'><strong>Short-selling restrictions:</strong> May prevent arbitrage execution</div></div><div class='limit-item'><span class='limit-icon'>•</span><div class='limit-text'><strong>Margin requirements:</strong> Tie up capital, reducing actual returns</div></div></div><div class='note-box'><div class='note-title'>📝 Dividend Adjustment</div><div class='note-text'>For dividend-paying stocks, replace S with (S − PV(Dividends)) in the parity equation. This accounts for the reduction in stock value when dividends are paid.</div></div></div></div></div></body></html>" class="slide-iframe" frameborder="0" scrolling="no"></iframe>
+        </div>
+
+        <!-- Slide 7: Interactive Calculator -->
+        <div class="calculator-slide" id="calculator-slide">
+            <div class="calc-header">
+                <h1 class="calc-title">Put-Call Parity Calculator</h1>
+                <div class="calc-subtitle">Enter known values to calculate the missing variable or check for arbitrage</div>
+            </div>
+            <div class="calc-content">
+                <div class="input-section">
+                    <div class="section-title">
+                        <span>📊</span> Input Variables
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="input-label">
+                            <span class="input-label-text">Stock Price</span>
+                            <span class="input-label-symbol">S</span>
+                        </div>
+                        <input type="number" class="input-field" id="stockPrice" placeholder="e.g., 100" step="0.01">
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="input-label">
+                            <span class="input-label-text">Strike Price</span>
+                            <span class="input-label-symbol">K</span>
+                        </div>
+                        <input type="number" class="input-field" id="strikePrice" placeholder="e.g., 105" step="0.01">
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="input-label">
+                            <span class="input-label-text">Call Option Price</span>
+                            <span class="input-label-symbol">C</span>
+                        </div>
+                        <input type="number" class="input-field" id="callPrice" placeholder="e.g., 8.50" step="0.01">
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="input-label">
+                            <span class="input-label-text">Put Option Price</span>
+                            <span class="input-label-symbol">P</span>
+                        </div>
+                        <input type="number" class="input-field" id="putPrice" placeholder="e.g., 10.25" step="0.01">
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="input-label">
+                            <span class="input-label-text">Risk-Free Rate (annual %)</span>
+                            <span class="input-label-symbol">r</span>
+                        </div>
+                        <input type="number" class="input-field" id="riskFreeRate" placeholder="e.g., 5" step="0.01" value="5">
+                    </div>
+                    
+                    <div class="input-group">
+                        <div class="input-label">
+                            <span class="input-label-text">Time to Expiration (years)</span>
+                            <span class="input-label-symbol">T</span>
+                        </div>
+                        <input type="number" class="input-field" id="timeToExpiry" placeholder="e.g., 0.5" step="0.01" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="output-section">
+                    <div class="section-title">
+                        <span>🎯</span> Calculate
+                    </div>
+                    
+                    <div class="calc-mode">
+                        <button class="mode-btn active" onclick="setMode('call')" id="mode-call">Find Call (C)</button>
+                        <button class="mode-btn" onclick="setMode('put')" id="mode-put">Find Put (P)</button>
+                        <button class="mode-btn" onclick="setMode('stock')" id="mode-stock">Find Stock (S)</button>
+                        <button class="mode-btn" onclick="setMode('arbitrage')" id="mode-arbitrage">Check Arbitrage</button>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-label" id="resultLabel">Calculated Call Price</div>
+                        <div class="result-value" id="resultValue">—</div>
+                        <div class="result-unit" id="resultUnit"></div>
+                    </div>
+                    
+                    <div class="formula-display">
+                        <div class="formula-text" id="formulaUsed">C = P + S − K×e<sup>−rT</sup></div>
+                    </div>
+                    
+                    <div class="arbitrage-box" id="arbitrageBox" style="display:none">
+                        <div class="arbitrage-title" id="arbTitle">No Arbitrage</div>
+                        <div class="arbitrage-text" id="arbText">Put-call parity holds within tolerance.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Summary -->
+        <div class="slide-wrapper">
+            <iframe srcdoc="<!DOCTYPE html><html><head><meta charset='UTF-8'><link href='https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap' rel='stylesheet'><link href='https://fonts.googleapis.com/icon?family=Material+Icons' rel='stylesheet'><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;overflow:hidden}.slide{width:1280px;height:720px;background:linear-gradient(135deg,#0f0f23 0%,#1a1a3e 50%,#2d1b4e 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;position:relative}.overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 20%,rgba(230,57,70,0.15),transparent 50%)}.content{position:relative;z-index:2;text-align:center;max-width:1000px;padding:40px}.title{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;margin-bottom:30px}.formula-hero{font-family:'Courier New',monospace;font-size:36px;color:#ff6b6b;background:rgba(230,57,70,0.15);padding:20px 40px;border-radius:12px;border:2px solid rgba(230,57,70,0.3);margin:20px 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:30px 0}.item{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:18px;text-align:left}.item-title{font-size:14px;font-weight:700;color:#ff6b6b;margin-bottom:6px}.item-text{font-size:12px;color:#a8b2d1;line-height:1.5}.footer{margin-top:20px;font-size:16px;color:#5a6a8a}</style></head><body><div class='slide'><div class='overlay'></div><div class='content'><h1 class='title'>Put-Call Parity Summary</h1><div class='formula-hero'>C + PV(K) = P + S</div><div class='grid'><div class='item'><div class='item-title'>Core Concept</div><div class='item-text'>Two portfolios with identical payoffs must have the same price</div></div><div class='item'><div class='item-title'>Protective Put</div><div class='item-text'>Stock + Put = downside protection while keeping upside</div></div><div class='item'><div class='item-title'>Fiduciary Call</div><div class='item-text'>Call + Bond = same payoff as protective put</div></div><div class='item'><div class='item-title'>Arbitrage</div><div class='item-text'>Violations create risk-free profit opportunities</div></div></div><div class='footer'>A cornerstone of derivatives pricing and trading</div></div></div></body></html>" class="slide-iframe" frameborder="0" scrolling="no"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'call';
+        
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('mode-' + mode).classList.add('active');
+            calculate();
+        }
+        
+        function getInputs() {
+            return {
+                S: parseFloat(document.getElementById('stockPrice').value) || null,
+                K: parseFloat(document.getElementById('strikePrice').value) || null,
+                C: parseFloat(document.getElementById('callPrice').value) || null,
+                P: parseFloat(document.getElementById('putPrice').value) || null,
+                r: (parseFloat(document.getElementById('riskFreeRate').value) || 5) / 100,
+                T: parseFloat(document.getElementById('timeToExpiry').value) || 0.5
+            };
+        }
+        
+        function pvK(K, r, T) {
+            return K * Math.exp(-r * T);
+        }
+        
+        function calculate() {
+            const inputs = getInputs();
+            const { S, K, C, P, r, T } = inputs;
+            
+            const resultLabel = document.getElementById('resultLabel');
+            const resultValue = document.getElementById('resultValue');
+            const resultUnit = document.getElementById('resultUnit');
+            const formulaUsed = document.getElementById('formulaUsed');
+            const arbBox = document.getElementById('arbitrageBox');
+            
+            arbBox.style.display = 'none';
+            
+            if (currentMode === 'call') {
+                if (P !== null && S !== null && K !== null) {
+                    const pv = pvK(K, r, T);
+                    const calcC = P + S - pv;
+                    resultLabel.textContent = 'Calculated Call Price';
+                    resultValue.textContent = '$' + calcC.toFixed(2);
+                    resultUnit.textContent = 'PV(K) = $' + pv.toFixed(2);
+                    formulaUsed.innerHTML = 'C = P + S − K×e<sup>−rT</sup>';
+                } else {
+                    resultValue.textContent = '—';
+                    resultUnit.textContent = 'Enter P, S, and K';
+                }
+            } else if (currentMode === 'put') {
+                if (C !== null && S !== null && K !== null) {
+                    const pv = pvK(K, r, T);
+                    const calcP = C + pv - S;
+                    resultLabel.textContent = 'Calculated Put Price';
+                    resultValue.textContent = '$' + calcP.toFixed(2);
+                    resultUnit.textContent = 'PV(K) = $' + pv.toFixed(2);
+                    formulaUsed.innerHTML = 'P = C + K×e<sup>−rT</sup> − S';
+                } else {
+                    resultValue.textContent = '—';
+                    resultUnit.textContent = 'Enter C, S, and K';
+                }
+            } else if (currentMode === 'stock') {
+                if (C !== null && P !== null && K !== null) {
+                    const pv = pvK(K, r, T);
+                    const calcS = C - P + pv;
+                    resultLabel.textContent = 'Implied Stock Price';
+                    resultValue.textContent = '$' + calcS.toFixed(2);
+                    resultUnit.textContent = 'PV(K) = $' + pv.toFixed(2);
+                    formulaUsed.innerHTML = 'S = C − P + K×e<sup>−rT</sup>';
+                } else {
+                    resultValue.textContent = '—';
+                    resultUnit.textContent = 'Enter C, P, and K';
+                }
+            } else if (currentMode === 'arbitrage') {
+                if (C !== null && P !== null && S !== null && K !== null) {
+                    const pv = pvK(K, r, T);
+                    const leftSide = C + pv;  // Call + PV(K)
+                    const rightSide = P + S;   // Put + Stock
+                    const diff = leftSide - rightSide;
+                    
+                    resultLabel.textContent = 'Parity Difference';
+                    resultValue.textContent = (diff >= 0 ? '+' : '') + '$' + diff.toFixed(2);
+                    resultUnit.textContent = 'Left: $' + leftSide.toFixed(2) + ' | Right: $' + rightSide.toFixed(2);
+                    formulaUsed.innerHTML = '(C + PV(K)) − (P + S)';
+                    
+                    arbBox.style.display = 'block';
+                    const arbTitle = document.getElementById('arbTitle');
+                    const arbText = document.getElementById('arbText');
+                    
+                    if (Math.abs(diff) < 0.05) {
+                        arbBox.classList.remove('violation');
+                        arbTitle.textContent = '✓ No Arbitrage';
+                        arbText.textContent = 'Put-call parity holds. The difference is within normal market tolerance.';
+                    } else if (diff > 0) {
+                        arbBox.classList.add('violation');
+                        arbTitle.textContent = '⚠️ Arbitrage Opportunity';
+                        arbText.textContent = 'Call is OVERPRICED. Strategy: Sell call, sell bond, buy put, buy stock. Profit: $' + diff.toFixed(2);
+                    } else {
+                        arbBox.classList.add('violation');
+                        arbTitle.textContent = '⚠️ Arbitrage Opportunity';
+                        arbText.textContent = 'Call is UNDERPRICED. Strategy: Buy call, buy bond, sell put, short stock. Profit: $' + Math.abs(diff).toFixed(2);
+                    }
+                } else {
+                    resultValue.textContent = '—';
+                    resultUnit.textContent = 'Enter all values (C, P, S, K)';
+                }
+            }
+        }
+        
+        // Add event listeners to all inputs
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+        
+        // Initial calculation
+        calculate();
+        
+        // Slide scaling
+        const slideWidth = 1280;
+        const slideHeight = 720;
+        function scalePresentationSlides() {
+            const wrappers = document.querySelectorAll('.slide-wrapper');
+            wrappers.forEach(wrapper => {
+                const iframe = wrapper.querySelector('.slide-iframe');
+                if (iframe && wrapper.offsetWidth > 0) {
+                    const scale = wrapper.offsetWidth / slideWidth;
+                    iframe.style.transform = `scale(${scale})`;
+                    iframe.style.width = `${slideWidth}px`;
+                    iframe.style.height = `${slideHeight}px`;
+                    wrapper.style.height = `${slideHeight * scale}px`;
+                    wrapper.style.width = '100%';
+                }
+            });
+        }
+        function initScaling() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', scalePresentationSlides);
+            } else {
+                scalePresentationSlides();
+            }
+        }
+        if (window.ResizeObserver) {
+            const resizeObserver = new ResizeObserver(() => scalePresentationSlides());
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.slide-wrapper').forEach(w => resizeObserver.observe(w));
+            });
+        }
+        initScaling();
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(scalePresentationSlides, 100);
+        });
+        setTimeout(scalePresentationSlides, 100);
+        setTimeout(scalePresentationSlides, 300);
+        setTimeout(scalePresentationSlides, 500);
+        setTimeout(scalePresentationSlides, 1000);
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.slide-iframe').forEach(iframe => {
+                iframe.addEventListener('load', scalePresentationSlides);
+            });
+        });
+    </script>
+</body>
+</html>
